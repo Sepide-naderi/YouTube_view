@@ -22,12 +22,9 @@ def watch_youtube_videos(video_urls, watch_time, proxies):
 
         chrome_options = Options()
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument(f'--proxy-server=http://{proxy}')
 
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.126/127 Safari/537.36"
         chrome_options.add_argument(f'user-agent={user_agent}')
 
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
@@ -48,5 +45,5 @@ proxies = load_proxies('httpProxy.txt')
 
 video_urls = input("enter the YouTube video urls and seperate them by commas: ").split(",")
 
-watch_time = 60
+watch_time = int(input("watchtime in sec: "))
 watch_youtube_videos(video_urls, watch_time, proxies)
