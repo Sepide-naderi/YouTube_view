@@ -1,45 +1,52 @@
-import scrapy
-from scrapy.crawler import CrawlerProcess
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+import random
 
-class YT_view(scrapy.Spider):
-    name = 'views'
-    start_urls = ['https://free-proxy-list.net']
+def load_proxies(filename):
+    with open(filename, 'r') as file:
+        proxies = [line.strip() for line in file.readlines()]
+    return proxies
 
-    headers = {
-        'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'Accept-Encoding' : 'gzip, deflate, br, zstd',
-        'Accept-Language' : 'en-US,en;q=0.9',
-        'Cache-Control' : 'max-age=0',
-        'Sec-Fetch-Mode' : 'navigate',
-        'Sec-Fetch-Site' : 'none',
-        'Sec-Fetch-User' : '?1',
-        'Upgrade-Insecure-Requests' : '1',
-        'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-    }
+def watch_youtube_videos(video_urls, watch_time, proxies):
+    video_index = 0
+    while True:
+        if video_index >= len(video_urls):
+            video_index = 0
 
-    def parse(self, response):
-        #print(response.text)
+        url = video_urls[video_index]
+        proxy = random.choice(proxies)
+        print(f'using proxy: {proxy}')
 
-        table = response.css('table')
-        rows = table.css('tr')
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument(f'--proxy-server=http://{proxy}')
 
-        #print(rows.getall())
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        chrome_options.add_argument(f'user-agent={user_agent}')
 
-        cols = [row.css('td::text').getall() for row in rows]
-        #print(cols)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-        proxies = []
+        try:
+            driver.get(url)
+            print(f'Watching video: {url}')
+            time.sleep(watch_time)
+            print(f'Finished watching video for {watch_time} seconds')
+        except Exception as e:
+            print(f'Error watching video {url}: {str(e)}')
+        finally:
+            driver.quit()
 
-        for col in cols:
-           if col and col[4] == 'elite proxy' and col[6] == 'yes':
-               proxies.append('https://' + col[0] + ':' + col[1])
+        video_index += 1
 
+proxies = load_proxies('httpProxy.txt')
 
+video_urls = input("enter the YouTube video urls and seperate them by commas: ").split(",")
 
-
-
-
-#run spider
-process = CrawlerProcess()
-process.crawl(YT_view)
-process.start()
+watch_time = 60
+watch_youtube_videos(video_urls, watch_time, proxies)
